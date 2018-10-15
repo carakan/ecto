@@ -418,7 +418,7 @@ defmodule Ecto.Association.Has do
   """
 
   @behaviour Ecto.Association
-  @on_delete_opts [:nothing, :nilify_all, :delete_all]
+  @on_delete_opts [:nothing, :nilify_all, :delete_all, :soft_delete_all]
   @on_replace_opts [:raise, :mark_as_invalid, :delete, :nilify]
   @has_one_on_replace_opts @on_replace_opts ++ [:update]
   defstruct [:cardinality, :field, :owner, :related, :owner_key, :related_key, :on_cast,
@@ -597,6 +597,13 @@ defmodule Ecto.Association.Has do
   def nilify_all(%{related_key: related_key} = refl, parent, repo, opts) do
     if query = on_delete_query(refl, parent) do
       repo.update_all query, [set: [{related_key, nil}]], opts
+    end
+  end
+
+  @doc false
+  def soft_delete_all(refl, parent, repo, opts) do
+    if query = on_delete_query(refl, parent) do
+      repo.update_all query, [set: [{:deleted_at, DateTime.utc_now()}]], opts
     end
   end
 
